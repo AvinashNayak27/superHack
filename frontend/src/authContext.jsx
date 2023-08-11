@@ -13,34 +13,40 @@ export const AuthProvider = ({ children }) => {
   const [isloading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!token) {
-      setIsLoading(false);
-      return;
-    }
-    checkAuthenticationStatus();
-  }, []);
-  
-  const checkAuthenticationStatus = async () => {
-    try {
-      const response = await axios.get("https://delicate-paper-7097.fly.dev/auth/check", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      if (response.data && response.data.authenticated) {
-        setIsAuthenticated(true);
+    const validateToken = async () => {
+      if (!token) {
         setIsLoading(false);
-      } else {
+        return;
+      }
+  
+      try {
+        const response = await axios.get("https://delicate-paper-7097.fly.dev/auth/check", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+  
+        if (response.data && response.data.authenticated) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+          setToken(null);
+          localStorage.removeItem("token");
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Failed to validate token:", error);
         setIsAuthenticated(false);
         setToken(null);
         localStorage.removeItem("token");
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to check authentication status:", error);
-      setIsAuthenticated(false);
-      setToken(null);
-    }
-  };
+    };
+  
+    validateToken();
+  }, [token]);
+  
+  
 
 
   const login = (newToken) => {

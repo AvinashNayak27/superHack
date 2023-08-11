@@ -24,19 +24,20 @@ const app = express();
 
 app.use(
   session({
-    secret: 'keyboard cat',
+    secret: "keyboard cat",
     resave: false,
     saveUninitialized: true,
   })
 );
 
-app.use(cors())
+app.use(cors());
 
 app.use(express.json());
 
 // Middleware to ensure the user is authenticated
 async function ensureAuthenticated(req, res, next) {
-  const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
+  const token =
+    req.headers.authorization && req.headers.authorization.split(" ")[1];
   if (!token) {
     return res.status(401).send("Unauthorized: No token provided");
   }
@@ -52,7 +53,7 @@ async function ensureAuthenticated(req, res, next) {
   }
 }
 app.get("/auth/check", ensureAuthenticated, (req, res) => {
-  res.json({ authenticated: true });
+  res.json({ authenticated: true, user: req.user });
 });
 
 app.get("/login", (req, res) => {
@@ -79,7 +80,6 @@ app.post("/exchange", async (req, res) => {
     const tokenSet = await client.callback(process.env.REDIRECT_URI, { code });
     console.log("tokenSet", tokenSet);
     res.json({ token: tokenSet?.access_token });
-
   } catch (err) {
     console.error("Error exchanging code for token:", err);
     res.sendStatus(500);
