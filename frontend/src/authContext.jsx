@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isloading, setIsLoading] = useState(true);
+  const [sub, setSub] = useState(null);
 
   useEffect(() => {
     const validateToken = async () => {
@@ -28,6 +29,7 @@ export const AuthProvider = ({ children }) => {
   
         if (response.data && response.data.authenticated) {
           setIsAuthenticated(true);
+          setSub(response.data.user.sub);
         } else {
           setIsAuthenticated(false);
           setToken(null);
@@ -66,7 +68,8 @@ export const AuthProvider = ({ children }) => {
     token,
     login,
     logout,
-    isLoading: isloading
+    isLoading: isloading,
+    sub,
   };
 
   return (
