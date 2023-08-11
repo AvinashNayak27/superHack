@@ -92,8 +92,9 @@ const getVideos = async () => {
   const videos = await Video.find();
   return videos;
 };
-const getVideosByUser = async (userId) => {
-  const videos = await Video.find({ userId: userId });
+const getVideosByUser = async (sub) => {
+  const user = await getUserBySub(sub);
+  const videos = await Video.find({ userId: user?._id });
   return videos;
 };
 
@@ -104,6 +105,14 @@ const createVideo = async (videoData) => {
 
 const getUserBySub = async (sub) => {
   const user = await User.findOne({ sub: sub });
+  return user;
+};
+
+const updateUserBySub = async (sub, updateData) => {
+  const user = await User.findOneAndUpdate({ sub: sub }, updateData, {
+    new: true, // Return the updated user
+    runValidators: true, // Ensure the update respects schema validations
+  });
   return user;
 };
 
@@ -146,6 +155,32 @@ app.get("/auth/check", ensureAuthenticated, (req, res) => {
 app.get("/users", async (req, res) => {
   const users = await getUsers();
   res.json(users);
+});
+
+app.get("/users/:userId", async (req, res) => {
+  const user = await getUserBySub(req.params.userId);
+  res.json(user);
+});
+
+app.put("/users/me", ensureAuthenticated, async (req, res) => {
+  try {
+    // Extract the user's 'sub' from the JWT payload stored in req.user
+    const { sub } = req.user;
+
+    // Update the user in the database
+    const updatedUser = await updateUserBySub(sub, req.body);
+
+    // If the user doesn't exist, return a 404 error
+    if (!updatedUser) {
+      return res.status(404).send("User not found");
+    }
+
+    // Return the updated user
+    res.json(updatedUser);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 app.get("/videos", async (req, res) => {
