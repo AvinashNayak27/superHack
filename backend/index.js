@@ -5,6 +5,8 @@ const cors = require("cors");
 const session = require("express-session");
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
+const { EAS, SchemaEncoder } = require("@ethereum-attestation-service/eas-sdk");
+const { ethers } = require("ethers");
 require("dotenv").config();
 let client;
 
@@ -114,6 +116,34 @@ const updateUserBySub = async (sub, updateData) => {
     runValidators: true, // Ensure the update respects schema validations
   });
   return user;
+};
+
+const EASContractAddress = "0x4200000000000000000000000000000000000021"; // OPGoerli
+
+const eas = new EAS(EASContractAddress);
+
+const provider = new ethers.providers.AlchemyProvider(
+  "optimism-goerli",
+  "kBartdLOlVLvuBkJTTOzEsAviHfsgLIv"
+);
+
+const signer = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY, provider);
+
+eas.connect(signer);
+
+const schemaUID =
+  "0x3be18745d7fa2c01231e9ba9a68f05dd2e2c76ab4e7a2a5f21ffeb68ad56fdcf";
+
+const encodeData = (address, playbackId, isSafe) => {
+  const schemaEncoder = new SchemaEncoder(
+    "address uploader,string videoID,bool isSafe"
+  );
+  const encodedData = schemaEncoder.encodeData([
+    { name: "uploader", value: address, type: "address" },
+    { name: "videoID", value: playbackId, type: "string" },
+    { name: "isSafe", value: isSafe, type: "bool" },
+  ]);
+  return encodedData;
 };
 
 const app = express();
@@ -234,6 +264,25 @@ app.post("/exchange", async (req, res) => {
   } catch (err) {
     console.error("Error exchanging code for token:", err);
     res.sendStatus(500);
+  }
+});
+
+app.post("/attest", async (req, res) => {
+  try {
+    const { address, playbackId, isSafe } = req.body;
+    const encodedData = encodeData(address, playbackId, isSafe);
+    const tx = await eas.attest({
+      schema: schemaUID,
+      data: {
+        recipient: address,
+        data: encodedData,
+      },
+    });
+    const newAttestationUID = await tx.wait();
+    res.json({ newAttestationUID });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ error: "An error occurred" });
   }
 });
 

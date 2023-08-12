@@ -17,6 +17,7 @@ function Dashboard() {
   const token = localStorage.getItem("token");
   const fileInputRef = useRef(null);
   const [statusMessage, setStatusMessage] = useState("");
+  const [newAttestationUID, setNewAttestationUID] = useState(null);
   const navigation = useNavigate();
 
   useEffect(() => {
@@ -60,6 +61,7 @@ function Dashboard() {
       const uploadResponse = await axios.post(uploadURL, formData);
 
       const videoPath = uploadResponse.data.uploadPath;
+      setStatusMessage("Checking for NSFW content ...");
       const generateSnapshotsResponse = await axios.post(generateSnapshotsURL, {
         videoPath,
       });
@@ -87,8 +89,20 @@ function Dashboard() {
       }
     } catch (error) {
       console.error("Operation failed:", error.message);
-      setStatusMessage("Operation failed: " + error.message);
     }
+  };
+
+  const attestVideo = async (data) => {
+    try {
+      const attestURL = "https://delicate-paper-7097.fly.dev/attest";
+      const attestResponse = await axios.post(attestURL, data);
+      return attestResponse.data;
+    } catch (error) {
+      console.error("Operation failed:", error.message);
+    }
+  };
+  const attestUrl =  (attestID) => {
+    return `https://optimism-goerli-bedrock.easscan.org/attestation/view/${attestID}`;
   };
 
   const createVideo = async () => {
@@ -121,7 +135,20 @@ function Dashboard() {
         .then((response) => {
           console.log("Video created:", response.data);
           setStatusMessage("Video created successfully");
-          navigation("/dashboard");
+          const data = {
+            address: publishedUser.data.walletAddress,
+            playbackId: asset.playbackId,
+            isSafe: true,
+          };
+          setStatusMessage("Attesting video ...");
+          attestVideo(data).then((response) => {
+            console.log("Video attested:", response);
+            setNewAttestationUID(response.newAttestationUID);
+            setStatusMessage("Video attested successfully");
+            setStatusMessage(
+              "View attestation at: " + attestUrl(response.newAttestationUID)
+            );
+          });
         })
         .catch((error) => {
           console.error("Error creating video:", error);
