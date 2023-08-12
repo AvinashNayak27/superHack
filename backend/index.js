@@ -89,12 +89,12 @@ const getUsers = async () => {
   return users;
 };
 const getVideos = async () => {
-  const videos = await Video.find();
+  const videos = await Video.find().populate("userId");
   return videos;
 };
 const getVideosByUser = async (sub) => {
   const user = await getUserBySub(sub);
-  const videos = await Video.find({ userId: user?._id });
+  const videos = await Video.find({ userId: user?._id }).populate("userId");
   return videos;
 };
 
@@ -126,9 +126,10 @@ app.use(
   })
 );
 
-app.use(cors());
-
 app.use(express.json());
+
+app.use(cors());
+app.options("/videos", cors());
 
 // Middleware to ensure the user is authenticated
 async function ensureAuthenticated(req, res, next) {
@@ -193,7 +194,7 @@ app.get("/videos/:userId", async (req, res) => {
   res.json(videos);
 });
 
-app.post("/videos", async (req, res) => {
+app.post("/videos", ensureAuthenticated, async (req, res) => {
   const video = await createVideo(req.body);
   res.json(video);
 });

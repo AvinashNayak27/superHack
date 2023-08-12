@@ -8,6 +8,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+
   useEffect(() => {
     // Define the API endpoint
     const apiUrl = 'https://delicate-paper-7097.fly.dev/videos';
@@ -25,7 +26,6 @@ function App() {
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p>Error: {error}</p>;
-  console.log(data);
 
   return (
     <div >

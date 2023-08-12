@@ -12,6 +12,7 @@ import {
   createReactClient,
   studioProvider,
 } from '@livepeer/react';
+import UserPage from "./Components/User.jsx";
 
 const client = createReactClient({
   provider: studioProvider({ apiKey: '9bd0fca8-7695-4962-a7ff-b4eff588d779' }),
@@ -36,6 +37,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Route path="/" element={<App />} />
           <Route path="/protected" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
           <Route path="/callback" element={<Callback />} />
+          <Route path="/user/:sub" element={<UserPage />} />
         </Routes>
       </Router>
     </AuthProvider>
