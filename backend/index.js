@@ -118,14 +118,12 @@ const updateUserBySub = async (sub, updateData) => {
   return user;
 };
 
-const EASContractAddress = "0x4200000000000000000000000000000000000021"; // OPGoerli
+const EASContractAddress = "0x4200000000000000000000000000000000000021"; // OP MAINNET
 
 const eas = new EAS(EASContractAddress);
 
-const provider = new ethers.providers.AlchemyProvider(
-  "optimism-goerli",
-  "kBartdLOlVLvuBkJTTOzEsAviHfsgLIv"
-);
+const provider = new ethers.providers.AlchemyProvider('optimism', 'UJaPqAUB36RG41eR6aJWJM2yiSx1kE-f')
+
 
 const signer = new ethers.Wallet(process.env.WALLET_PRIVATE_KEY, provider);
 

@@ -17,8 +17,6 @@ function Dashboard() {
   const token = localStorage.getItem("token");
   const fileInputRef = useRef(null);
   const [statusMessage, setStatusMessage] = useState("");
-  const [newAttestationUID, setNewAttestationUID] = useState(null);
-  const navigation = useNavigate();
 
   useEffect(() => {
     // Define the API endpoint
@@ -81,7 +79,7 @@ function Dashboard() {
       } else {
         setStatusMessage(
           "NSFW content detected : " +
-            generateSnapshotsResponse?.data?.nsfwContent[1]
+          generateSnapshotsResponse?.data?.nsfwContent[1]
         );
         throw new Error(
           "NSFW content detected. Asset not uploaded to Livepeer"
@@ -101,8 +99,8 @@ function Dashboard() {
       console.error("Operation failed:", error.message);
     }
   };
-  const attestUrl =  (attestID) => {
-    return `https://optimism-goerli-bedrock.easscan.org/attestation/view/${attestID}`;
+  const attestUrl = (attestID) => {
+    return `https://optimism.easscan.org/attestation/view/${attestID}`;
   };
 
   const createVideo = async () => {
@@ -143,11 +141,21 @@ function Dashboard() {
           setStatusMessage("Attesting video ...");
           attestVideo(data).then((response) => {
             console.log("Video attested:", response);
-            setNewAttestationUID(response.newAttestationUID);
             setStatusMessage("Video attested successfully");
             setStatusMessage(
-              "View attestation at: " + attestUrl(response.newAttestationUID)
+              <p>
+                View attestation : 
+                <a
+                  href={attestUrl(response.newAttestationUID)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ textDecoration: "underline" }}
+                >
+                   {` here`}
+                </a>
+              </p>
             );
+
           });
         })
         .catch((error) => {
@@ -200,7 +208,31 @@ function Dashboard() {
 
   return (
     <div>
-      <h2>Dashboard</h2>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "10px", // Add padding to center the h2 vertically
+        }}
+      >
+        <p>' '</p>
+        <h2>Dashboard</h2>
+        <button
+          onClick={logout}
+          style={{
+            padding: "10px",
+            backgroundColor: "red",
+            color: "white",
+            border: "none",
+            borderRadius: "5px",
+            cursor: "pointer",
+          }}
+        >
+          Logout
+        </button>
+      </div>
+
       <p>Welcome: {user?.sub}</p>
       {!user?.walletAddress && (
         <button className="btn" onClick={Addwallet}>
@@ -218,21 +250,6 @@ function Dashboard() {
         <h3>Videos</h3>
         <VideoCards videos={videos} />
       </div>
-
-      <button
-        onClick={logout}
-        style={{
-          marginTop: "20px",
-          padding: "10px",
-          backgroundColor: "red",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-      >
-        Logout
-      </button>
     </div>
   );
 }
